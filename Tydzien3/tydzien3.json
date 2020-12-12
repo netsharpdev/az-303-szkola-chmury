@@ -62,7 +62,9 @@
         {
             "name": "VmDeployment2",
             "type": "Microsoft.Resources/deployments",
-            "dependsOn": [ "[resourceId('Microsoft.Resources/deployments', 'VmDeployment1')]" ],
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'VnetDeployment')]"
+            ],
             "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
@@ -72,11 +74,11 @@
                 },
                 "parameters": {
                     "environmentName": { "value": "[parameters('EnvironmentName')]" },
-                    "instanceNumber": { "value": "001" },
+                    "instanceNumber": { "value": "002" },
                     "departament": { "value": "[parameters('Departament')]" },
                     "adminUser": { "value": "[parameters('AdminUserVm')]" },
                     "adminPass": { "value": "[parameters('AdminPasswordVm')]" },
-                    "subnetId": { "value": "[reference('VnetDeployment').outputs.subnet1Id.value]" }
+                    "subnetId": { "value": "[reference('VnetDeployment').outputs.subnet2Id.value]" }
                 }
             }
         }

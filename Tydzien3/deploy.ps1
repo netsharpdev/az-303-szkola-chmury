@@ -1,6 +1,6 @@
 ﻿Connect-AzAccount
 
-$rg = 'rg-netsharp-learn'
+$rg = 'rg-netsharp-learn-prod'
 
 # Generate a SAS token
 $VNetLinkedTemplateUri = "https://raw.githubusercontent.com/netsharpdev/az-303-szkola-chmury/master/Tydzien3/Vnet.json"
