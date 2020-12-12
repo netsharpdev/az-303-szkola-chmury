@@ -103,19 +103,19 @@
                     {
                         "name": "[variables('subnet1')]",
                         "properties": {
-                            "addressPrefix": "[parameters('subnetIpAddress1')]"
-                        },
-                        "networkSecurityGroup": {
-                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup1'))]"
+                            "addressPrefix": "[parameters('subnetIpAddress1')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup1'))]"
+                            }
                         }
                     },
                     {
                         "name": "[variables('subnet2')]",
                         "properties": {
-                            "addressPrefix": "[parameters('subnetIpAddress2')]"
-                        },
-                        "networkSecurityGroup": {
-                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup2'))]"
+                            "addressPrefix": "[parameters('subnetIpAddress2')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup2'))]"
+                            }
                         }
                     }
 
