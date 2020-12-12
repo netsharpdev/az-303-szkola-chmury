@@ -1,0 +1,120 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environmentName": {
+            "defaultValue": "prod",
+            "type": "string"
+        },
+        "departament": {
+            "defaultValue": "fin",
+            "type": "string"
+        },
+        "instanceNumber": {
+            "type": "string"
+        },
+        "subnetId": {
+            "type": "string"
+        },
+        "adminUser": { "type": "string" },
+        "adminPass": { "type": "string" }
+    },
+    "functions": [],
+    "variables": {
+        "pipName": "[concat('pip-', parameters('departament'), '-', parameters('environmentName'), '-', resourceGroup().location, '-', parameters('instanceNumber'))]",
+        "nicName": "[concat('nic-', parameters('departament'), '-', parameters('environmentName'), '-', resourceGroup().location, '-', parameters('instanceNumber'))]",
+        "vmName": "[concat('vm-', parameters('departament'), '-', parameters('environmentName'), '-', resourceGroup().location, '-', parameters('instanceNumber'))]"
+    },
+    "resources": [
+
+        {
+            "name": "[variables('pipName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "PublicIPAddress"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('pipName')]"
+                }
+            }
+        },
+
+
+
+        {
+            "name": "[variables('nicName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+            ],
+            "tags": {
+                "displayName": "ubuntuVM1-NetworkInterface"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+                            },
+                            "subnet": {
+                                "id": "[parameters('subnetId')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[variables('vmName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            ],
+            "tags": {
+                "displayName": "[variables('vmName')]"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Basic_A0"
+                },
+                "osProfile": {
+                    "computerName": "[replace(variables('vmName'),'-','')]",
+                    "adminUsername": "[parameters('adminUser')]",
+                    "adminPassword": "[parameters('adminPass')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "18.04-LTS",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat('disk',replace(variables('vmName'), '-', ''))]",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

@@ -1,0 +1,86 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "VnetTemplateUrl": {
+            "type": "string"
+        },
+        "Vm1TemplateUrl": { "type": "string" },
+        "Vm2TemplateUrl": { "type": "string" },
+        "EnvironmentName": {
+            "type": "string",
+            "defaultValue": "prod"
+        },
+        "Departament": {
+            "type": "string",
+            "defaultValue": "fin"
+        },
+        "AdminUserVm": { "type": "string" },
+        "AdminPasswordVm": { "type": "string" }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "VnetDeployment",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "properties": {
+                "mode": "Complete",
+                "templateLink": {
+                    "uri": "[parameters('VnetTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "environmentName": { "value": "[parameters('EnvironmentName')]" },
+                    "departament": { "value": "[parameters('Departament')]" }
+                }
+            }
+        },
+        {
+            "name": "VmDeployment1",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'VnetDeployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[parameters('Vm1TemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "environmentName": { "value": "[parameters('EnvironmentName')]" },
+                    "instanceNumber": { "value": "001" },
+                    "departament": { "value": "[parameters('Departament')]" },
+                    "adminUser": { "value": "[parameters('AdminUserVm')]" },
+                    "adminPass": { "value": "[parameters('AdminPasswordVm')]" },
+                    "subnetId": { "value": "[reference('VnetDeployment').outputs.subnet1Id.value]" }
+                }
+            }
+        },
+        {
+            "name": "VmDeployment2",
+            "type": "Microsoft.Resources/deployments",
+            "dependsOn": [ "[resourceId('Microsoft.Resources/deployments', 'VmDeployment1')]" ],
+            "apiVersion": "2019-10-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[parameters('Vm2TemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "environmentName": { "value": "[parameters('EnvironmentName')]" },
+                    "instanceNumber": { "value": "001" },
+                    "departament": { "value": "[parameters('Departament')]" },
+                    "adminUser": { "value": "[parameters('AdminUserVm')]" },
+                    "adminPass": { "value": "[parameters('AdminPasswordVm')]" },
+                    "subnetId": { "value": "[reference('VnetDeployment').outputs.subnet1Id.value]" }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
