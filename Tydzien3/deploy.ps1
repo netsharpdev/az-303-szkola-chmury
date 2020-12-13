@@ -1,5 +1,9 @@
 ﻿Connect-AzAccount
 
+$userFilter = "*" + (Get-AzContext).Account.Id.Replace('@','_') + "*"
+
+$user = Get-AzAdUser | ?{$_.UserPrincipalName -like $userFilter}
+
 $rg = 'rg-netsharp-learn-prod'
 
 # Generate a SAS token
@@ -15,5 +19,7 @@ New-AzResourceGroupDeployment `
   -VnetTemplateUrl $VNetLinkedTemplateUri `
   -VmTemplateUrl $VMLinkedTemplateUri `
   -EnvironmentName 'dev' `
+  -ObjectIdAdUser $user.Id `
   -AdminUserVm 'NetsharpAdmin' `
-  -AdminPasswordVm 'Netsharp123!'
+  -AdminPasswordVm 'Netsharp123!' `
+  -RoleDefinition 'VmStartStopRoleDefinition'

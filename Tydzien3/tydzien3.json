@@ -6,6 +6,7 @@
             "type": "string"
         },
         "VmTemplateUrl": { "type": "string" },
+        "KeyvaultTemplateUrl": { "type": "string" },
         "EnvironmentName": {
             "type": "string",
             "defaultValue": "prod"
@@ -15,11 +16,34 @@
             "defaultValue": "fin"
         },
         "AdminUserVm": { "type": "string" },
-        "AdminPasswordVm": { "type": "string" }
+        "AdminPasswordVm": { "type": "string" },
+        "ObjectIdAdUser": { "type": "string" },
+        "RoleDefinition": { "type": "string" }
     },
     "functions": [],
     "variables": {},
     "resources": [
+        {
+            "name": "KeyvaultDeployment",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[parameters('KeyvaultTemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "environmentName": { "value": "[parameters('EnvironmentName')]" },
+                    "instanceNumber": { "value": "001" },
+                    "departament": { "value": "[parameters('Departament')]" },
+                    "objectId": { "value": "[parameters('ObjectIdAdUser')]" },
+                    "adminUser": { "value": "[parameters('AdminUserVm')]" },
+                    "adminPassword": { "value": "[parameters('AdminPasswordVm')]" }
+                }
+            }
+
+        },
         {
             "name": "VnetDeployment",
             "type": "Microsoft.Resources/deployments",
@@ -41,7 +65,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2019-10-01",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'VnetDeployment')]"
+                "[resourceId('Microsoft.Resources/deployments', 'VnetDeployment')]",
+                "[resourceId('Microsoft.Resources/deployments', 'KeyvaultDeployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -53,8 +78,22 @@
                     "environmentName": { "value": "[parameters('EnvironmentName')]" },
                     "instanceNumber": { "value": "001" },
                     "departament": { "value": "[parameters('Departament')]" },
-                    "adminUser": { "value": "[parameters('AdminUserVm')]" },
-                    "adminPass": { "value": "[parameters('AdminPasswordVm')]" },
+                    "adminUser": {
+                        "reference": {
+                            "KeyVault": {
+                                "id": "[reference('KeyvaultDeployment').outputs.keyvaultId]",
+                                "secretName": "[reference('KeyvaultDeployment').outputs.vmUserNameSecretName]"
+                            }
+                        }
+                    },
+                    "adminPass": {
+                        "reference": {
+                            "KeyVault": {
+                                "id": "[reference('KeyvaultDeployment').outputs.keyvaultId]",
+                                "secretName": "[reference('KeyvaultDeployment').outputs.vmPasswordSecretName]"
+                            }
+                        }
+                    },
                     "subnetId": { "value": "[reference('VnetDeployment').outputs.subnet1Id.value]" }
                 }
             }
@@ -63,7 +102,8 @@
             "name": "VmDeployment2",
             "type": "Microsoft.Resources/deployments",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'VnetDeployment')]"
+                "[resourceId('Microsoft.Resources/deployments', 'VnetDeployment')]",
+                "[resourceId('Microsoft.Resources/deployments', 'KeyvaultDeployment')]"
             ],
             "apiVersion": "2019-10-01",
             "properties": {
@@ -80,6 +120,31 @@
                     "adminPass": { "value": "[parameters('AdminPasswordVm')]" },
                     "subnetId": { "value": "[reference('VnetDeployment').outputs.subnet2Id.value]" }
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleDefinitions",
+            "apiVersion": "2018-01-01-preview",
+            "name": "[parameters('RoleDefinition')]",
+            "properties": {
+                "roleName": "Virtual Machine Restarter",
+                "description": "Allows to start, power off and read VM.",
+                "type": "customRole",
+                "isCustom": true,
+                "permissions": [
+                    {
+                        "actions": [
+                            "Microsoft.Compute/*/read",
+                            "Microsoft.Compute/virtualMachines/start/action",
+                            "Microsoft.Compute/virtualMachines/poweroff/action",
+                            "Microsoft.Resources/subscriptions/resourceGroups/read",
+                            "Microsoft.Support/*"
+                        ]
+                    }
+                ],
+                "assignableScopes": [
+                    "[subscription().id]"
+                ]
             }
         }
     ],
