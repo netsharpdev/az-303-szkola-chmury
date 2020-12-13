@@ -8,8 +8,8 @@ $rg = 'rg-netsharp-learn-prod'
 
 # Generate a SAS token
 $VNetLinkedTemplateUri = "https://raw.githubusercontent.com/netsharpdev/az-303-szkola-chmury/master/Tydzien3/Vnet.json"
-
-$VMLinkedTemplateUri = "https://raw.githubusercontent.com/netsharpdev/az-303-szkola-chmury/master/Tydzien3/vm-create-arm.json"
+$KeyvaultTemplateUrl = "https://raw.githubusercontent.com/netsharpdev/az-303-szkola-chmury/master/Tydzien3/Keyvault.json"
+$VMLinkedTemplateUri = "https://raw.githubusercontent.com/netsharpdev/az-303-szkola-chmury/master/Tydzien3/Vm.json"
 
 # Deploy the template
 New-AzResourceGroupDeployment `
@@ -18,6 +18,7 @@ New-AzResourceGroupDeployment `
   -TemplateFile '.\tydzien3.json' `
   -VnetTemplateUrl $VNetLinkedTemplateUri `
   -VmTemplateUrl $VMLinkedTemplateUri `
+  -KeyvaultTemplateUrl $KeyvaultTemplateUrl `
   -EnvironmentName 'dev' `
   -ObjectIdAdUser $user.Id `
   -AdminUserVm 'NetsharpAdmin' `
