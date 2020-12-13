@@ -1,0 +1,10 @@
+Resource group:
+rg-<department>-<environment>-<location>
+Vnet:
+vnet-<department>-<environment>-<location>-<instance>
+VM:
+vm-<department>-<environment>-<location>-<instance>
+Disk:
+disk<department><environment><location><instance>
+Storage account:
+st<department><environment><location><instance>
